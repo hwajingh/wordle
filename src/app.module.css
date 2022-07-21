@@ -23,3 +23,22 @@
   align-items: center;
   margin: 1.5px;
 }
+
+.green {
+  background-color: green;
+}
+
+.yellow {
+  background-color: yellow;
+}
+
+.gray {
+  background-color: gray;
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: row;
+  height: 20px;
+  width: 30px;
+}
