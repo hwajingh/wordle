@@ -8,6 +8,8 @@ import axios from "axios";
 import { removeWhiteSpaces } from "./helper";
 import classNames from "classnames";
 // import Button from "@mui/material/Button";
+const ENTER = "ENTER";
+const BACKSPACE = "BACKSPACE";
 
 function App() {
   const [wordList, setWordList] = useState<string[]>([
@@ -23,19 +25,7 @@ function App() {
 
   const [count, setCount] = useState(0);
 
-  const wordBank = [
-    "tiger",
-    "enter",
-    "maker",
-    "break",
-    "which",
-    "lunch",
-    "maybe",
-    "about",
-    "eager",
-    "spice",
-    "earth",
-  ];
+  const wordBank = ["TIGER", "ENTER"];
 
   const [rando, setRando] = useState<number>(0);
 
@@ -47,191 +37,340 @@ function App() {
   useEffect(() => {
     getRandomInt(wordBank.length);
   }, [wordBank.length]);
+
+  const onLetterTyped = (letter: string) => {
+    const currentWord = wordList[count];
+    let curr = [...wordList];
+
+    letter = letter.toUpperCase();
+    console.log(letter);
+    // split currentWord into array of characters
+    let mod = currentWord.split("");
+    // replace current char with corresponding index of mod
+    if (letter === BACKSPACE) {
+      mod[removeWhiteSpaces(currentWord).length - 1] = " ";
+    } else {
+      mod[removeWhiteSpaces(currentWord).length] = letter;
+    }
+    // if mod length is less than 6 join mod
+    if (removeWhiteSpaces(mod.join("")).length < 6) {
+      if (letter !== ENTER) {
+        curr[count] = mod.join("");
+      }
+    }
+
+    setWordList(curr);
+
+    if (letter === ENTER && curr[count].length === 5) {
+      axios
+        .get(`https://api.dictionaryapi.dev/api/v2/entries/en/${curr[count]}`)
+        .then(function (response: any) {
+          // handle success
+          const word = response.data[0].word;
+          if (!word) {
+            alert("not a word");
+          } else {
+            console.log(word);
+            let color = [];
+            for (let i = 0; i < 5; i++) {
+              const currWordChar = curr[count].charAt(i);
+              if (currWordChar === wordBank[rando].charAt(i)) {
+                color[i] = styles.green;
+              } else if (wordBank[rando].includes(currWordChar)) {
+                color[i] = styles.yellow;
+              } else {
+                color[i] = styles.gray;
+              }
+            }
+            setCount(count + 1);
+
+            console.log(wordBank[rando]);
+            let newColor = wordColors;
+            newColor[count] = color;
+            setWordColors(newColor);
+
+            if (curr[count] === wordBank[rando]) {
+              alert("you got it");
+            }
+          }
+        });
+    }
+  };
+
   return (
     <div
       tabIndex={0}
       className={styles.root}
       onKeyDown={(e) => {
-        const currentWord = wordList[count];
-        let curr = [...wordList];
-
-        // split currentWord into array of characters
-        let mod = currentWord.split("");
-        // replace current char with corresponding index of mod
-        if (e.key === "Backspace") {
-          mod[removeWhiteSpaces(currentWord).length - 1] = " ";
-        } else {
-          mod[removeWhiteSpaces(currentWord).length] = e.key;
-        }
-        // if mod length is less than 6 join mod
-        if (removeWhiteSpaces(mod.join("")).length < 6) {
-          if (e.key !== "Enter") {
-            curr[count] = mod.join("");
-          }
-        }
-
-        setWordList(curr);
-
-        if (e.key === "Enter" && curr[count].length === 5) {
-          axios
-            .get(
-              `https://api.dictionaryapi.dev/api/v2/entries/en/${curr[count]}`
-            )
-            .then(function (response: any) {
-              // handle success
-              const word = response.data[0].word;
-              if (!word) {
-                alert("not a word");
-              } else {
-                console.log(word);
-                let color = [];
-                for (let i = 0; i < 5; i++) {
-                  const currWordChar = curr[count].charAt(i);
-                  if (currWordChar === wordBank[rando].charAt(i)) {
-                    color[i] = styles.green;
-                  } else if (wordBank[rando].includes(currWordChar)) {
-                    color[i] = styles.yellow;
-                  } else {
-                    color[i] = styles.gray;
-                  }
-                }
-                setCount(count + 1);
-
-                console.log(wordBank[rando]);
-                let newColor = wordColors;
-                newColor[count] = color;
-                setWordColors(newColor);
-
-                if (curr[count] === wordBank[rando]) {
-                  alert("you got it");
-                }
-              }
-            });
-        }
+        onLetterTyped(e.key);
       }}
     >
       <div className={styles.wordList}>
-        {wordList.map((word, wordIndex) => (
-          <div className={styles.wordItem}>
-            {word.split("").map((letter, index) => {
-              if (wordColors[wordIndex]?.[index]) {
-                return (
-                  <div
-                    className={classNames(
-                      styles.letter,
-                      wordColors[wordIndex][index]
-                    )}
-                  >
-                    {letter}
-                  </div>
-                );
-              } else {
-                return (
-                  <div className={classNames(styles.letter)}>{letter}</div>
-                );
-              }
-            })}
-          </div>
-        ))}
+        <div className={styles.wordGrid}>
+          {wordList.map((word, wordIndex) => (
+            <div className={styles.wordItem}>
+              {word.split("").map((letter, index) => {
+                if (wordColors[wordIndex]?.[index]) {
+                  return (
+                    <div
+                      className={classNames(
+                        styles.letter,
+                        wordColors[wordIndex][index]
+                      )}
+                    >
+                      {letter}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className={classNames(styles.letter)}>{letter}</div>
+                  );
+                }
+              })}
+            </div>
+          ))}
+        </div>
+        <div className={styles.keyboard}>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("Q");
+            }}
+            type="button"
+          >
+            Q
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("W");
+            }}
+            type="button"
+          >
+            W
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("E");
+            }}
+            type="button"
+          >
+            E
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("R");
+            }}
+            type="button"
+          >
+            R
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("T");
+            }}
+            type="button"
+          >
+            T
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("Y");
+            }}
+            type="button"
+          >
+            Y
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("Q");
+            }}
+            type="button"
+          >
+            U
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("I");
+            }}
+            type="button"
+          >
+            I
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("O");
+            }}
+            type="button"
+          >
+            O
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("P");
+            }}
+            type="button"
+          >
+            P
+          </button>
+        </div>
 
-        <div className="Keyboard-module_row__YWe5w">
-          <button type="button" data-key="q" className="Key-module_key__Rv-Vp">
-            q
+        <div className={styles.keyboard}>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("A");
+            }}
+            type="button"
+          >
+            A
           </button>
-          <button type="button" data-key="w" className="Key-module_key__Rv-Vp">
-            w
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("S");
+            }}
+            type="button"
+          >
+            S
           </button>
-          <button type="button" data-key="e" className="Key-module_key__Rv-Vp">
-            e
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("D");
+            }}
+            type="button"
+          >
+            D
           </button>
-          <button type="button" data-key="r" className="Key-module_key__Rv-Vp">
-            r
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("F");
+            }}
+            type="button"
+          >
+            F
           </button>
-          <button type="button" data-key="t" className="Key-module_key__Rv-Vp">
-            t
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("G");
+            }}
+            type="button"
+          >
+            G
           </button>
-          <button type="button" data-key="y" className="Key-module_key__Rv-Vp">
-            y
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("H");
+            }}
+            type="button"
+          >
+            H
           </button>
-          <button type="button" data-key="u" className="Key-module_key__Rv-Vp">
-            u
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("J");
+            }}
+            type="button"
+          >
+            J
           </button>
-          <button type="button" data-key="i" className="Key-module_key__Rv-Vp">
-            i
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("K");
+            }}
+            type="button"
+          >
+            K
           </button>
-          <button type="button" data-key="o" className="Key-module_key__Rv-Vp">
-            o
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("L");
+            }}
+            type="button"
+          >
+            L
           </button>
-          <button type="button" data-key="p" className="Key-module_key__Rv-Vp">
-            p
-          </button>
+        </div>
 
-          <div className="Keyboard-module_row__YWe5w">
-            <div data-testid="spacer" className="Key-module_half__ljsj8"></div>
-            <button
-              type="button"
-              data-key="a"
-              className="Key-module_key__Rv-Vp"
-            >
-              a
-            </button>
-            <button
-              type="button"
-              data-key="s"
-              className="Key-module_key__Rv-Vp"
-            >
-              s
-            </button>
-            <button
-              type="button"
-              data-key="d"
-              className="Key-module_key__Rv-Vp"
-            >
-              d
-            </button>
-            <button
-              type="button"
-              data-key="f"
-              className="Key-module_key__Rv-Vp"
-            >
-              f
-            </button>
-            <button
-              type="button"
-              data-key="g"
-              className="Key-module_key__Rv-Vp"
-            >
-              g
-            </button>
-            <button
-              type="button"
-              data-key="h"
-              className="Key-module_key__Rv-Vp"
-            >
-              h
-            </button>
-            <button
-              type="button"
-              data-key="j"
-              className="Key-module_key__Rv-Vp"
-            >
-              j
-            </button>
-            <button
-              type="button"
-              data-key="k"
-              className="Key-module_key__Rv-Vp"
-            >
-              k
-            </button>
-            <button
-              type="button"
-              data-key="l"
-              className="Key-module_key__Rv-Vp"
-            >
-              l
-            </button>
-          </div>
+        <div className={styles.keyboard}>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("Z");
+            }}
+            type="button"
+          >
+            Z
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("X");
+            }}
+            type="button"
+          >
+            X
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("C");
+            }}
+            type="button"
+          >
+            C
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("V");
+            }}
+            type="button"
+          >
+            V
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("B");
+            }}
+            type="button"
+          >
+            B
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("N");
+            }}
+            type="button"
+          >
+            N
+          </button>
+          <button
+            className={styles.button}
+            onClick={() => {
+              onLetterTyped("M");
+            }}
+            type="button"
+          >
+            M
+          </button>
         </div>
       </div>
     </div>

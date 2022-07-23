@@ -11,6 +11,7 @@
 .root {
   height: 100vh;
   display: flex;
+  background-color: black;
   justify-content: center;
 }
 .letter {
@@ -39,6 +40,24 @@
 .keyboard {
   display: flex;
   flex-direction: row;
-  height: 20px;
-  width: 30px;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto 8px;
+}
+
+.button {
+  font-family: inherit;
+  font-weight: bold;
+  border-radius: 4px;
+  outline: none;
+  border: 0;
+  margin: 0px 6px 0px 0px;
+  height: 58px;
+  width: 43px;
+  background-color: #818384;
+  color: #ffffff;
+}
+
+.wordGrid {
+  margin-bottom: 30px;
 }
