@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 // import * as React from "react";
 // import Stack from "@mui/material/Stack";
 // import logo from "./logo.svg";
@@ -23,8 +23,27 @@ function App() {
 
   const [count, setCount] = useState(0);
 
-  const wordGuess = "tiger";
+  const wordBank = [
+    "tiger",
+    "enter",
+    "maker",
+    "break",
+    "which",
+    "lunch",
+    "maybe",
+    "about",
+  ];
 
+  const [rando, setRando] = useState<number>(0);
+
+  const getRandomInt = (max: number) => {
+    let num = Math.floor(Math.random() * max);
+
+    setRando(num);
+  };
+  useEffect(() => {
+    getRandomInt(wordBank.length);
+  }, []);
   return (
     <div
       tabIndex={0}
@@ -65,9 +84,9 @@ function App() {
                 let color = [];
                 for (let i = 0; i < 5; i++) {
                   const currWordChar = curr[count].charAt(i);
-                  if (currWordChar === wordGuess.charAt(i)) {
+                  if (currWordChar === wordBank[rando].charAt(i)) {
                     color[i] = styles.green;
-                  } else if (wordGuess.includes(currWordChar)) {
+                  } else if (wordBank[rando].includes(currWordChar)) {
                     color[i] = styles.yellow;
                   } else {
                     color[i] = styles.gray;
@@ -79,7 +98,7 @@ function App() {
                 newColor[count] = color;
                 setWordColors(newColor);
 
-                if (curr[count] === wordGuess) {
+                if (curr[count] === wordBank[rando]) {
                   alert("you got it");
                 }
               }
