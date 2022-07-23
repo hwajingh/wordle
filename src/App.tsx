@@ -46,7 +46,7 @@ function App() {
   };
   useEffect(() => {
     getRandomInt(wordBank.length);
-  }, []);
+  });
   return (
     <div
       tabIndex={0}
