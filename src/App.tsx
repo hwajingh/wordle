@@ -81,7 +81,7 @@ function App() {
               // handle success
               const word = response.data[0].word;
               if (!word) {
-                alert(response.data.title);
+                alert("not a word");
               } else {
                 console.log(word);
                 let color = [];
