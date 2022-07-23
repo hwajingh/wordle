@@ -5,9 +5,10 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import styles from "./app.module.css";
 import axios from "axios";
-import { removeWhiteSpaces } from "./helper";
+import { isLetter, removeWhiteSpaces } from "./helper";
 import classNames from "classnames";
-// import Button from "@mui/material/Button";
+import { Button } from "./button";
+
 const ENTER = "ENTER";
 const BACKSPACE = "BACKSPACE";
 
@@ -25,75 +26,80 @@ function App() {
 
   const [count, setCount] = useState(0);
 
-  const wordBank = ["TIGER", "ENTER"];
+  const [wordToGuess, setWordToGuess] = useState<string>("");
 
-  const [rando, setRando] = useState<number>(0);
-
-  const getRandomInt = (max: number) => {
-    let num = Math.floor(Math.random() * max);
-
-    setRando(num);
-  };
   useEffect(() => {
-    getRandomInt(wordBank.length);
-  }, [wordBank.length]);
+    axios
+      .get(`https://random-word-api.herokuapp.com/word?length=5`)
+      .then(function (response: any) {
+        // handle success
+        const word = response.data[0].toUpperCase();
+
+        setWordToGuess(word);
+      });
+  }, []);
 
   const onLetterTyped = (letter: string) => {
-    const currentWord = wordList[count];
-    let curr = [...wordList];
-
+    console.log(wordToGuess);
     letter = letter.toUpperCase();
-    console.log(letter);
-    // split currentWord into array of characters
-    let mod = currentWord.split("");
-    // replace current char with corresponding index of mod
-    if (letter === BACKSPACE) {
-      mod[removeWhiteSpaces(currentWord).length - 1] = " ";
-    } else {
-      mod[removeWhiteSpaces(currentWord).length] = letter;
-    }
-    // if mod length is less than 6 join mod
-    if (removeWhiteSpaces(mod.join("")).length < 6) {
-      if (letter !== ENTER) {
-        curr[count] = mod.join("");
+    if (isLetter(letter) || letter === BACKSPACE || letter === ENTER) {
+      const currentWord = wordList[count];
+      let curr = [...wordList];
+
+      console.log(letter);
+      // split currentWord into array of characters
+      let mod = currentWord.split("");
+      // replace current char with corresponding index of mod
+      if (letter === BACKSPACE) {
+        mod[removeWhiteSpaces(currentWord).length - 1] = " ";
+      } else {
+        mod[removeWhiteSpaces(currentWord).length] = letter;
       }
-    }
+      // if mod length is less than 6 join mod
+      if (removeWhiteSpaces(mod.join("")).length < 6) {
+        if (letter !== ENTER) {
+          curr[count] = mod.join("");
+        }
+      }
 
-    setWordList(curr);
+      setWordList(curr);
 
-    if (letter === ENTER && curr[count].length === 5) {
-      axios
-        .get(`https://api.dictionaryapi.dev/api/v2/entries/en/${curr[count]}`)
-        .then(function (response: any) {
-          // handle success
-          const word = response.data[0].word;
-          if (!word) {
-            alert("not a word");
-          } else {
-            console.log(word);
-            let color = [];
-            for (let i = 0; i < 5; i++) {
-              const currWordChar = curr[count].charAt(i);
-              if (currWordChar === wordBank[rando].charAt(i)) {
-                color[i] = styles.green;
-              } else if (wordBank[rando].includes(currWordChar)) {
-                color[i] = styles.yellow;
-              } else {
-                color[i] = styles.gray;
+      if (letter === ENTER && curr[count].length === 5) {
+        axios
+          .get(`https://api.dictionaryapi.dev/api/v2/entries/en/${curr[count]}`)
+          .then(function (response: any) {
+            // handle success
+            const word = response.data[0].word;
+            if (!word) {
+              alert("not a word");
+            } else {
+              console.log(word);
+              let color = [];
+              for (let i = 0; i < 5; i++) {
+                const currWordChar = curr[count].charAt(i);
+                if (currWordChar === wordToGuess.charAt(i)) {
+                  color[i] = styles.green;
+                } else if (wordToGuess.includes(currWordChar)) {
+                  color[i] = styles.yellow;
+                } else {
+                  color[i] = styles.gray;
+                }
+              }
+              setCount(count + 1);
+
+              console.log(wordToGuess);
+              let newColor = wordColors;
+              newColor[count] = color;
+              setWordColors(newColor);
+
+              if (curr[count] === wordToGuess) {
+                alert("You got it");
+              } else if (count === 5) {
+                alert(` The Word is ${wordToGuess}`);
               }
             }
-            setCount(count + 1);
-
-            console.log(wordBank[rando]);
-            let newColor = wordColors;
-            newColor[count] = color;
-            setWordColors(newColor);
-
-            if (curr[count] === wordBank[rando]) {
-              alert("you got it");
-            }
-          }
-        });
+          });
+      }
     }
   };
 
@@ -106,6 +112,8 @@ function App() {
       }}
     >
       <div className={styles.wordList}>
+        <div className={styles.header}>Tiger Wordle</div>
+
         <div className={styles.wordGrid}>
           {wordList.map((word, wordIndex) => (
             <div className={styles.wordItem}>
@@ -131,245 +139,185 @@ function App() {
           ))}
         </div>
         <div className={styles.keyboard}>
-          <button
-            className={styles.button}
-            onClick={() => {
+          <Button
+            value="Q"
+            onLetterTyped={() => {
               onLetterTyped("Q");
             }}
-            type="button"
-          >
-            Q
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+
+          <Button
+            value="W"
+            onLetterTyped={() => {
               onLetterTyped("W");
             }}
-            type="button"
-          >
-            W
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="E"
+            onLetterTyped={() => {
               onLetterTyped("E");
             }}
-            type="button"
-          >
-            E
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="R"
+            onLetterTyped={() => {
               onLetterTyped("R");
             }}
-            type="button"
-          >
-            R
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="T"
+            onLetterTyped={() => {
               onLetterTyped("T");
             }}
-            type="button"
-          >
-            T
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="Y"
+            onLetterTyped={() => {
               onLetterTyped("Y");
             }}
-            type="button"
-          >
-            Y
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
-              onLetterTyped("Q");
+          />
+          <Button
+            value="U"
+            onLetterTyped={() => {
+              onLetterTyped("U");
             }}
-            type="button"
-          >
-            U
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="I"
+            onLetterTyped={() => {
               onLetterTyped("I");
             }}
-            type="button"
-          >
-            I
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="O"
+            onLetterTyped={() => {
               onLetterTyped("O");
             }}
-            type="button"
-          >
-            O
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="P"
+            onLetterTyped={() => {
               onLetterTyped("P");
             }}
-            type="button"
-          >
-            P
-          </button>
+          />
         </div>
 
         <div className={styles.keyboard}>
-          <button
-            className={styles.button}
-            onClick={() => {
+          <Button
+            value="A"
+            onLetterTyped={() => {
               onLetterTyped("A");
             }}
-            type="button"
-          >
-            A
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="S"
+            onLetterTyped={() => {
               onLetterTyped("S");
             }}
-            type="button"
-          >
-            S
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="D"
+            onLetterTyped={() => {
               onLetterTyped("D");
             }}
-            type="button"
-          >
-            D
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="F"
+            onLetterTyped={() => {
               onLetterTyped("F");
             }}
-            type="button"
-          >
-            F
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="G"
+            onLetterTyped={() => {
               onLetterTyped("G");
             }}
-            type="button"
-          >
-            G
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="H"
+            onLetterTyped={() => {
               onLetterTyped("H");
             }}
-            type="button"
-          >
-            H
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="J"
+            onLetterTyped={() => {
               onLetterTyped("J");
             }}
-            type="button"
-          >
-            J
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="K"
+            onLetterTyped={() => {
               onLetterTyped("K");
             }}
-            type="button"
-          >
-            K
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="L"
+            onLetterTyped={() => {
               onLetterTyped("L");
             }}
-            type="button"
-          >
-            L
-          </button>
+          />
         </div>
 
         <div className={styles.keyboard}>
           <button
-            className={styles.button}
+            className={styles.specialButton}
             onClick={() => {
+              onLetterTyped("Enter");
+            }}
+          >
+            Enter
+          </button>
+          <Button
+            value="Z"
+            onLetterTyped={() => {
               onLetterTyped("Z");
             }}
-            type="button"
-          >
-            Z
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="X"
+            onLetterTyped={() => {
               onLetterTyped("X");
             }}
-            type="button"
-          >
-            X
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="C"
+            onLetterTyped={() => {
               onLetterTyped("C");
             }}
-            type="button"
-          >
-            C
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="V"
+            onLetterTyped={() => {
               onLetterTyped("V");
             }}
-            type="button"
-          >
-            V
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="B"
+            onLetterTyped={() => {
               onLetterTyped("B");
             }}
-            type="button"
-          >
-            B
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="N"
+            onLetterTyped={() => {
               onLetterTyped("N");
             }}
-            type="button"
-          >
-            N
-          </button>
-          <button
-            className={styles.button}
-            onClick={() => {
+          />
+          <Button
+            value="M"
+            onLetterTyped={() => {
               onLetterTyped("M");
             }}
-            type="button"
+          />
+
+          <button
+            className={styles.specialButton}
+            onClick={() => {
+              onLetterTyped("Backspace");
+            }}
           >
-            M
+            Backspace
           </button>
         </div>
       </div>

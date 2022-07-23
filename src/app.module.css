@@ -23,18 +23,20 @@
   justify-content: center;
   align-items: center;
   margin: 1.5px;
+  color: white;
+  font-weight: bold;
 }
 
 .green {
-  background-color: rgb(16, 204, 22);
+  background-color: #538d4e;
 }
 
 .yellow {
-  background-color: rgb(232, 228, 21);
+  background-color: #b59f3b;
 }
 
 .gray {
-  background-color: gray;
+  background-color: #3a3a3c;
 }
 
 .keyboard {
@@ -56,8 +58,36 @@
   width: 43px;
   background-color: #818384;
   color: #ffffff;
+  font-size: 14px;
 }
 
 .wordGrid {
   margin-bottom: 30px;
+}
+
+.header {
+  position: fixed;
+  top: 20px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 40px;
+  font-weight: bold;
+  border-bottom: 1px solid #3a3a3c;
+}
+
+.specialButton {
+  font-family: inherit;
+  font-weight: bold;
+  border-radius: 4px;
+  outline: none;
+  border: 0;
+  margin: 0px 6px 0px 0px;
+  height: 58px;
+
+  background-color: #818384;
+  color: #ffffff;
+  font-size: 14px;
 }
