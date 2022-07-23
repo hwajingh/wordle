@@ -33,6 +33,8 @@ function App() {
     "maybe",
     "about",
     "eager",
+    "spice",
+    "earth",
   ];
 
   const [rando, setRando] = useState<number>(0);
