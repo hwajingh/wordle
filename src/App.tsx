@@ -46,7 +46,7 @@ function App() {
   };
   useEffect(() => {
     getRandomInt(wordBank.length);
-  });
+  }, [wordBank.length]);
   return (
     <div
       tabIndex={0}
@@ -97,6 +97,7 @@ function App() {
                 }
                 setCount(count + 1);
 
+                console.log(wordBank[rando]);
                 let newColor = wordColors;
                 newColor[count] = color;
                 setWordColors(newColor);
