@@ -78,6 +78,10 @@ function App() {
                 let newColor = wordColors;
                 newColor[count] = color;
                 setWordColors(newColor);
+
+                if (curr[count] === wordGuess) {
+                  alert("you got it");
+                }
               }
             });
         }
