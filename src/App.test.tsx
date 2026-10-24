@@ -3,12 +3,12 @@ import { render, screen } from '@testing-library/react';
 import axios from 'axios';
 import App from './App';
 
-// Mock axios so the answer fetch on mount does not depend on the network.
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-mockedAxios.get.mockReturnValue(new Promise(() => {}) as never);
-
+// No jest.mock factory here: axios 0.27's automock does not reliably
+// provide a working .get, so the mock is assigned directly before render.
 test('renders the Wordle header, keyboard and footer', () => {
+  (axios as unknown as { get: unknown }).get = jest.fn(
+    () => new Promise(() => {}),
+  );
   render(<App />);
   expect(screen.getByText(/Tiger Wordle/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Q' })).toBeInTheDocument();
