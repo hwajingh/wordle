@@ -36,17 +36,20 @@ function App() {
         const word = response.data[0].toUpperCase();
 
         setWordToGuess(word);
+      })
+      .catch(function () {
+        // FIX: previously a failed answer fetch left wordToGuess "" with
+        // no message, making the game unwinnable.
+        alert("Could not load a word to guess. Please refresh and try again.");
       });
   }, []);
 
   const onLetterTyped = (letter: string) => {
-    console.log(wordToGuess);
     letter = letter.toUpperCase();
     if (isLetter(letter) || letter === BACKSPACE || letter === ENTER) {
       const currentWord = wordList[count];
       let curr = [...wordList];
 
-      console.log(letter);
       // split currentWord into array of characters
       let mod = currentWord.split("");
       // replace current char with corresponding index of mod
@@ -73,7 +76,6 @@ function App() {
             if (!word) {
               alert("not a word");
             } else {
-              console.log(word);
               let color = [];
               for (let i = 0; i < 5; i++) {
                 const currWordChar = curr[count].charAt(i);
@@ -85,12 +87,16 @@ function App() {
                   color[i] = styles.gray;
                 }
               }
-              setCount(count + 1);
+              setCount((prevCount) => prevCount + 1);
 
-              console.log(wordToGuess);
-              let newColor = wordColors;
-              newColor[count] = color;
-              setWordColors(newColor);
+              // FIX: previously this mutated wordColors in place and passed
+              // the same array reference back, so React could bail out and
+              // leave guessed-row colours stale.
+              setWordColors((prevColors) => {
+                const nextColors = [...prevColors];
+                nextColors[count] = color;
+                return nextColors;
+              });
 
               if (curr[count] === wordToGuess) {
                 alert("You got it");
@@ -98,6 +104,12 @@ function App() {
                 alert(` The Word is ${wordToGuess}`);
               }
             }
+          })
+          .catch(function () {
+            // FIX: a non-word returns HTTP 404, which rejects the promise.
+            // Previously there was no .catch, so the alert above never ran
+            // and the guess was silently swallowed.
+            alert("not a word");
           });
       }
     }
@@ -116,11 +128,12 @@ function App() {
 
         <div className={styles.wordGrid}>
           {wordList.map((word, wordIndex) => (
-            <div className={styles.wordItem}>
+            <div className={styles.wordItem} key={wordIndex}>
               {word.split("").map((letter, index) => {
                 if (wordColors[wordIndex]?.[index]) {
                   return (
                     <div
+                      key={index}
                       className={classNames(
                         styles.letter,
                         wordColors[wordIndex][index]
@@ -131,7 +144,7 @@ function App() {
                   );
                 } else {
                   return (
-                    <div className={classNames(styles.letter)}>{letter}</div>
+                    <div key={index} className={classNames(styles.letter)}>{letter}</div>
                   );
                 }
               })}
