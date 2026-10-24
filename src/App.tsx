@@ -76,7 +76,7 @@ function App() {
             if (!word) {
               alert("not a word");
             } else {
-              let color = [];
+              let color: string[] = [];
               for (let i = 0; i < 5; i++) {
                 const currWordChar = curr[count].charAt(i);
                 if (currWordChar === wordToGuess.charAt(i)) {
