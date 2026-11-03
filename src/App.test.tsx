@@ -188,6 +188,27 @@ test('Play Again loads a fresh word and resets the board without a refresh', asy
   alertSpy.mockRestore();
 });
 
+test('scored tiles animate: right letters bounce, wrong letters shake, misplaced wobble', async () => {
+  const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+  mockAxios('apple', 'ok');
+  const { container } = render(<App />);
+  await waitForAnswer();
+  // TIGER vs APPLE: T/I/G/R wrong (shake), E misplaced (wobble).
+  typeWord('TIGER');
+  pressEnter();
+  await new Promise((r) => setTimeout(r, 50));
+  expect(container.querySelector('.tileWrong')).not.toBeNull();
+  expect(container.querySelector('.tilePartial')).not.toBeNull();
+  expect(container.querySelector('.tileRight')).toBeNull();
+  // A correct guess bounces every tile.
+  typeWord('APPLE');
+  pressEnter();
+  await waitFor(() => {
+    expect(container.querySelectorAll('.tileRight').length).toBe(5);
+  });
+  alertSpy.mockRestore();
+});
+
 test('duplicate letters are not over-counted (APPLE vs POPPY)', () => {
   // Old code used answer.includes(char) and coloured all three Ps.
   // Correct Wordle scoring: one exact P (green), one misplaced P

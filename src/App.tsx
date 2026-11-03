@@ -239,23 +239,35 @@ function App() {
           {wordList.map((word, wordIndex) => (
             <div className={styles.wordItem} key={wordIndex}>
               {word.split("").map((letter, index) => {
-                if (wordColors[wordIndex]?.[index]) {
-                  return (
-                    <div
-                      key={index}
-                      className={classNames(
-                        styles.letter,
-                        wordColors[wordIndex][index]
-                      )}
-                    >
-                      {letter}
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div key={index} className={classNames(styles.letter)}>{letter}</div>
-                  );
-                }
+                const colorClass = wordColors[wordIndex]?.[index];
+                // Animation follows the tile's verdict: green bounces,
+                // grey shakes, yellow wobbles. It only appears once the
+                // tile is scored, so unscored rows stay still.
+                const animClass =
+                  colorClass === styles.green
+                    ? styles.tileRight
+                    : colorClass === styles.yellow
+                      ? styles.tilePartial
+                      : colorClass === styles.gray
+                        ? styles.tileWrong
+                        : undefined;
+                return (
+                  <div
+                    key={index}
+                    className={classNames(
+                      styles.letter,
+                      colorClass,
+                      animClass,
+                    )}
+                    style={
+                      animClass
+                        ? { animationDelay: `${index * 90}ms` }
+                        : undefined
+                    }
+                  >
+                    {letter}
+                  </div>
+                );
               })}
             </div>
           ))}

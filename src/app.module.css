@@ -71,6 +71,104 @@
   margin-bottom: 12px;
 }
 
+/* Per-letter feedback animations, triggered when a guess is scored.
+   Wrong (grey): a sharp horizontal shake. Right (green): a distinct
+   celebratory bounce — different motion, amplitude and timing, so
+   the two can never be confused. Misplaced (yellow) sits in between
+   with a gentle wobble. Tiles stagger by 90ms via animation-delay,
+   set inline in App.tsx, for a left-to-right reveal. */
+@keyframes tile-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes tile-bounce {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.15) translateY(-4px);
+  }
+  60% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tile-wobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg) translateX(-2px);
+  }
+  75% {
+    transform: rotate(3deg) translateX(2px);
+  }
+}
+
+.tileWrong {
+  animation: tile-shake 0.45s ease-in-out;
+}
+
+.tileRight {
+  animation: tile-bounce 0.6s ease-in-out;
+}
+
+.tilePartial {
+  animation: tile-wobble 0.5s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tileWrong,
+  .tileRight,
+  .tilePartial {
+    animation: none;
+  }
+}
+
+/* Small screens: the fixed 62px tiles and 43px keys overflow a
+   320–390px phone. Shrink both so the whole grid and keyboard fit
+   without horizontal scrolling. */
+@media (max-width: 600px) {
+  .letter {
+    width: 48px;
+    height: 48px;
+    font-size: 26px;
+  }
+  .button {
+    width: 32px;
+    height: 52px;
+    font-size: 12px;
+    margin-right: 4px;
+  }
+  .specialButton {
+    height: 52px;
+    font-size: 12px;
+    padding: 0 10px;
+  }
+  .header {
+    font-size: 32px;
+  }
+}
+
 .header {
   position: fixed;
   top: 20px;
