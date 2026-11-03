@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import styles from "./app.module.css";
 import axios from "axios";
@@ -57,13 +57,22 @@ function App() {
   const [answerLoaded, setAnswerLoaded] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [isLoadingWord, setIsLoadingWord] = useState(true);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     rootRef.current?.focus();
   }, []);
 
-  useEffect(() => {
+  // Dynamic word loading: the answer is fetched on demand, not baked
+  // into the build, and the same loader powers both the first game
+  // and "Play Again" — a new word and a fresh board without a page
+  // refresh. The board is only reset once a valid new word arrives,
+  // so a failed fetch leaves the finished game (and its Play Again
+  // button) intact for a retry instead of wiping it.
+  const loadWord = useCallback(() => {
+    setIsLoadingWord(true);
+    setAnswerLoaded(false);
     axios
       .get(`https://random-word-api.herokuapp.com/word?length=5`, {
         timeout: 5000,
@@ -77,15 +86,30 @@ function App() {
         // colour guesses against an empty or short answer.
         if (/^[A-Z]{5}$/.test(word)) {
           setWordToGuess(word);
+          setWordList(
+            Array.from({ length: MAX_GUESSES }, () => EMPTY_ROW),
+          );
+          setWordColors([[]]);
+          setCount(0);
+          setGameOver(false);
           setAnswerLoaded(true);
         } else {
-          alert("Could not load a word to guess. Please refresh and try again.");
+          alert(
+            "Could not load a word to guess. Please try again.",
+          );
         }
       })
       .catch(function () {
-        alert("Could not load a word to guess. Please refresh and try again.");
+        alert("Could not load a word to guess. Please try again.");
+      })
+      .finally(function () {
+        setIsLoadingWord(false);
       });
   }, []);
+
+  useEffect(() => {
+    loadWord();
+  }, [loadWord]);
 
   const submitGuess = (guess: string, rowIndex: number) => {
     // Correct answer bypasses the dictionary entirely. The old code
@@ -236,6 +260,21 @@ function App() {
             </div>
           ))}
         </div>
+        {isLoadingWord ? (
+          <div className={styles.status}>Loading a new word…</div>
+        ) : null}
+        {gameOver && !isLoadingWord ? (
+          <div className={styles.keyboard}>
+            <button
+              className={styles.specialButton}
+              onClick={() => {
+                loadWord();
+              }}
+            >
+              Play Again
+            </button>
+          </div>
+        ) : null}
         <div className={styles.keyboard}>
           <Button
             value="Q"

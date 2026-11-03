@@ -155,6 +155,39 @@ test('after losing on the 6th guess, further input is ignored and does not crash
   alertSpy.mockRestore();
 });
 
+test('Play Again loads a fresh word and resets the board without a refresh', async () => {
+  const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+  // First game: answer APPLE. Play Again: answer TIGER.
+  const answers = ['apple', 'tiger'];
+  (axios as unknown as { get: unknown }).get = jest.fn((url: string) => {
+    if (url.includes('random-word-api')) {
+      return Promise.resolve({ data: [answers.shift()] });
+    }
+    if (url.includes('dictionaryapi')) {
+      return Promise.resolve({ data: [{ word: 'tiger' }] });
+    }
+    return Promise.reject(new Error(`unknown url ${url}`));
+  });
+  render(<App />);
+  await waitForAnswer();
+  typeWord('APPLE');
+  pressEnter();
+  await waitFor(() => {
+    expect(alertSpy).toHaveBeenCalledWith('You got it');
+  });
+  // A Play Again button appears only after the game ends.
+  fireEvent.click(screen.getByRole('button', { name: /Play Again/i }));
+  await waitForAnswer();
+  // Input works again and the new word is the fresh answer: guessing
+  // TIGER now wins, which it could not do while the board was locked.
+  typeWord('TIGER');
+  pressEnter();
+  await waitFor(() => {
+    expect(alertSpy).toHaveBeenCalledTimes(2);
+  });
+  alertSpy.mockRestore();
+});
+
 test('duplicate letters are not over-counted (APPLE vs POPPY)', () => {
   // Old code used answer.includes(char) and coloured all three Ps.
   // Correct Wordle scoring: one exact P (green), one misplaced P
