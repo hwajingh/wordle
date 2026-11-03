@@ -12,11 +12,7 @@ const MAX_GUESSES = 6;
 const WORD_LENGTH = 5;
 const EMPTY_ROW = "     ";
 
-// Two-pass Wordle colouring with letter counts. The old code used
-// wordToGuess.includes(char), which over-counts duplicates: e.g.
-// answer APPLE, guess PAPER would colour both Ps. Pass 1 marks exact
-// matches and removes those letters from the pool; pass 2 marks
-// present-but-misplaced only while that letter still remains.
+// Two-pass scoring with letter counts, so duplicate letters are not over-counted.
 export function scoreGuess(guess: string, answer: string): string[] {
   const color: string[] = new Array(WORD_LENGTH).fill(styles.gray);
   const remaining: Record<string, number> = {};
@@ -39,10 +35,6 @@ export function scoreGuess(guess: string, answer: string): string[] {
 }
 
 // A guess is only submittable when it is exactly 5 letters.
-// The old code submitted whenever the row string was 5 chars long,
-// and rows are padded with spaces, so "TIGE " (4 letters + space)
-// was sent to the dictionary as "TIGE " and came back 404 as
-// "not a word" — even though the player thought the row was full.
 function isCompleteGuess(row: string | undefined): row is string {
   return !!row && /^[A-Z]{5}$/.test(row);
 }
@@ -64,12 +56,8 @@ function App() {
     rootRef.current?.focus();
   }, []);
 
-  // Dynamic word loading: the answer is fetched on demand, not baked
-  // into the build, and the same loader powers both the first game
-  // and "Play Again" — a new word and a fresh board without a page
-  // refresh. The board is only reset once a valid new word arrives,
-  // so a failed fetch leaves the finished game (and its Play Again
-  // button) intact for a retry instead of wiping it.
+  // Answer is fetched on demand, for the first game and Play Again.
+  // The board resets only once a valid new word arrives.
   const loadWord = useCallback(() => {
     setIsLoadingWord(true);
     setAnswerLoaded(false);
@@ -82,8 +70,7 @@ function App() {
           typeof response.data?.[0] === "string"
             ? response.data[0].toUpperCase()
             : "";
-        // Guard against a malformed / wrong-length answer: never
-        // colour guesses against an empty or short answer.
+        // Never colour guesses against an empty or short answer.
         if (/^[A-Z]{5}$/.test(word)) {
           setWordToGuess(word);
           setWordList(
@@ -112,10 +99,7 @@ function App() {
   }, [loadWord]);
 
   const submitGuess = (guess: string, rowIndex: number) => {
-    // Correct answer bypasses the dictionary entirely. The old code
-    // rejected a correct guess whenever the dictionary request failed
-    // for any reason (network, rate limit, outage) — including the
-    // reported case where a valid word was shown as "not a word".
+    // A correct answer bypasses the dictionary check.
     if (guess === wordToGuess) {
       const color = scoreGuess(guess, wordToGuess);
       setWordColors((prev) => {
@@ -138,9 +122,7 @@ function App() {
         { timeout: 5000 },
       )
       .then(function (response: any) {
-        // Validity is the HTTP status (200), not the shape of the
-        // body: a 200 with an unexpected body used to fall through
-        // to "not a word" via the !word check.
+        // Validity is the HTTP status (200).
         const color = scoreGuess(guess, wordToGuess);
         setWordColors((prev) => {
           const next = [...prev];
@@ -154,9 +136,7 @@ function App() {
         }
       })
       .catch(function (error: any) {
-        // Only a 404 means "not a word". Any other failure (network,
-        // timeout, 429, 500) is a check failure, not a judgement on
-        // the word — misreporting it as "not a word" was the bug.
+        // Only a 404 means "not a word"; other failures are check failures.
         if (error?.response?.status === 404) {
           alert("not a word");
         } else {
@@ -169,10 +149,7 @@ function App() {
   };
 
   const onLetterTyped = (letter: string) => {
-    // Game over, a check in flight, or no current row: ignore input.
-    // The old code kept accepting input after the last row, so
-    // wordList[6] was undefined and the next keypress crashed on
-    // .split(). Double-Enter also submitted the same row twice.
+    // Ignore input after game over, during a check, or with no current row.
     if (gameOver || isChecking || count >= MAX_GUESSES) return;
     letter = letter.toUpperCase();
 
@@ -184,8 +161,6 @@ function App() {
         alert("Still loading a word to guess. Please wait a moment.");
         return;
       }
-      // Ignore Enter on an incomplete row instead of sending a
-      // space-padded guess to the dictionary and showing "not a word".
       if (!isCompleteGuess(currentWord)) return;
       submitGuess(currentWord, count);
       return;
@@ -240,9 +215,7 @@ function App() {
             <div className={styles.wordItem} key={wordIndex}>
               {word.split("").map((letter, index) => {
                 const colorClass = wordColors[wordIndex]?.[index];
-                // Animation follows the tile's verdict: green bounces,
-                // grey shakes, yellow wobbles. It only appears once the
-                // tile is scored, so unscored rows stay still.
+                // Animation follows the tile's verdict: green bounces, grey shakes, yellow wobbles.
                 const animClass =
                   colorClass === styles.green
                     ? styles.tileRight
